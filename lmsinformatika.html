@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS Informatika SMP - Portal Pembelajaran & Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl font-bold bg-white text-blue-600 px-3 py-1 rounded-lg shadow">💻</span>
+                <div>
+                    <h1 class="text-lg font-bold">LMS Informatika Fase D</h1>
+                    <p class="text-xs text-blue-100">SMP Negeri 3 Ponorogo</p>
+                </div>
+            </div>
+            <!-- Navigasi Tab -->
+            <nav class="flex space-x-2 bg-blue-700 p-1 rounded-xl text-sm font-medium">
+                <button onclick="switchTab('materi')" id="tabMateriBtn" class="px-4 py-2 rounded-lg bg-white text-blue-600 shadow-sm transition">📚 Materi & Modul</button>
+                <button onclick="switchTab('assessment')" id="tabAssessmentBtn" class="px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition">📝 Assessment & Ulangan</button>
+                <button onclick="switchTab('admin')" id="tabAdminBtn" class="px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition">⚙️ Panel Guru (Admin)</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        
+        <!-- TAB 1: MATERI -->
+        <section id="tabMateri" class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-700">Daftar Modul & Materi Pembelajaran</h2>
+                <input type="text" id="searchInput" placeholder="Cari materi atau topik..." 
+                    class="w-full sm:w-64 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div id="loadingMateri" class="text-center py-12 text-slate-500">Memuat data materi...</div>
+            <div id="materiList" class="space-y-3"></div>
+        </section>
+
+        <!-- TAB 2: ASSESSMENT / SOAL LATIHAN & ULANGAN -->
+        <section id="tabAssessment" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-2">
+                <h2 class="text-lg font-semibold text-slate-700">Assessment, Soal Latihan & Ulangan Harian</h2>
+                <p class="text-sm text-slate-500">Kerjakan tugas, lembar kerja formatif, atau ulangan harian yang diampu sesuai jadwal.</p>
+            </div>
+            <div id="loadingAssessment" class="text-center py-12 text-slate-500">Memuat data soal & ulangan...</div>
+            <div id="assessmentList" class="space-y-3"></div>
+        </section>
+
+        <!-- TAB 3: PANEL ADMIN (INPUT MATERI / SOAL) -->
+        <section id="tabAdmin" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Panel Tambah Konten Baru</h2>
+                <p class="text-xs text-slate-500">Gunakan form ini untuk menambahkan materi atau soal latihan langsung ke Google Sheets.</p>
+            </div>
+            
+            <form id="addForm" onsubmit="submitForm(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Konten</label>
+                    <select id="inputTipe" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="Materi">Materi Pembelajaran / Modul</option>
+                        <option value="assessment">Assessment / Soal Latihan / Ulangan Harian</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Kategori / Bab</label>
+                    <input type="text" id="inputKategori" required placeholder="Contoh: Berpikir Komputasional / Ulangan Bab 1" 
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Judul Materi / Soal</label>
+                    <input type="text" id="inputJudul" required placeholder="Contoh: Algoritma & Struktur Data / Ulangan Harian 1" 
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Link Google Drive / Google Form</label>
+                    <input type="url" id="inputLink" required placeholder="https://drive.google.com/... atau link Google Form" 
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition shadow-sm">
+                    Simpan ke Google Sheets 🚀
+                </button>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 text-center py-4 text-xs text-slate-500 mt-auto">
+        &copy; 2026 Kurikulum Merdeka • Portal Pembelajaran Informatika SMP Negeri 3 Ponorogo
+    </footer>
+
+    <!-- JavaScript Controller -->
+    <script>
+        // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGXsiY0GpYfjuntAf-VxtKzCeiYKjhtUZYyJ617IrX9YULNoO0--yQfFf0iLUOZ0K2/exec";
+        let globalData = [];
+
+        function switchTab(tab) {
+            document.getElementById('tabMateri').classList.add('hidden');
+            document.getElementById('tabAssessment').classList.add('hidden');
+            document.getElementById('tabAdmin').classList.add('hidden');
+            
+            document.getElementById('tabMateriBtn').className = "px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition";
+            document.getElementById('tabAssessmentBtn').className = "px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition";
+            document.getElementById('tabAdminBtn').className = "px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition";
+
+            if(tab === 'materi') {
+                document.getElementById('tabMateri').classList.remove('hidden');
+                document.getElementById('tabMateriBtn').className = "px-4 py-2 rounded-lg bg-white text-blue-600 shadow-sm transition";
+            } else if(tab === 'assessment') {
+                document.getElementById('tabAssessment').classList.remove('hidden');
+                document.getElementById('tabAssessmentBtn').className = "px-4 py-2 rounded-lg bg-white text-blue-600 shadow-sm transition";
+            } else if(tab === 'admin') {
+                document.getElementById('tabAdmin').classList.remove('hidden');
+                document.getElementById('tabAdminBtn').className = "px-4 py-2 rounded-lg bg-white text-blue-600 shadow-sm transition";
+            }
+        }
+
+        async function fetchAllData() {
+            try {
+                let response = await fetch(`${SCRIPT_URL}?action=getMateri`);
+                globalData = await response.json();
+                
+                document.getElementById('loadingMateri').style.display = 'none';
+                document.getElementById('loadingAssessment').style.display = 'none';
+
+                renderLists(globalData);
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    const keyword = e.target.value.toLowerCase();
+                    const filtered = globalData.filter(item => 
+                        item.judul_materi.toLowerCase().includes(keyword) || 
+                        item.kategori.toLowerCase().includes(keyword)
+                    );
+                    renderLists(filtered);
+                });
+
+            } catch (error) {
+                document.getElementById('loadingMateri').innerHTML = '<span class="text-red-500">Gagal memuat data. Periksa kembali URL Script Anda.</span>';
+            }
+        }
+
+        function renderLists(data) {
+            const materiListEl = document.getElementById('materiList');
+            const assessmentListEl = document.getElementById('assessmentList');
+            
+            materiListEl.innerHTML = '';
+            assessmentListEl.innerHTML = '';
+
+            const materis = data.filter(i => !i.tipe || i.tipe === "Materi");
+            const assessments = data.filter(i => i.tipe === "assessment");
+
+            // Render Materi
+            if(materis.length === 0) materiListEl.innerHTML = '<p class="text-center text-slate-400 py-6">Belum ada materi.</p>';
+            materis.forEach(item => {
+                materiListEl.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full">${item.kategori}</span>
+                            <h3 class="font-medium text-slate-800">${item.judul_materi}</h3>
+                            <p class="text-xs text-slate-400">Diunggah: ${item.tanggal}</p>
+                        </div>
+                        <a href="${item.link_drive}" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition shadow-sm">
+                            Buka Materi 📁
+                        </a>
+                    </div>`;
+            });
+
+            // Render Assessment / Soal
+            if(assessments.length === 0) assessmentListEl.innerHTML = '<p class="text-center text-slate-400 py-6">Belum ada soal latihan atau ulangan harian aktif.</p>';
+            assessments.forEach(item => {
+                assessmentListEl.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold px-2.5 py-0.5 bg-orange-50 text-orange-700 rounded-full">${item.kategori}</span>
+                            <h3 class="font-medium text-slate-800">${item.judul_materi}</h3>
+                            <p class="text-xs text-slate-400">Dipublikasikan: ${item.tanggal}</p>
+                        </div>
+                        <a href="${item.link_drive}" target="_blank" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded-lg transition shadow-sm">
+                            Kerjakan Soal 📝
+                        </a>
+                    </div>`;
+            });
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Menyimpan ke Google Sheets...";
+            btn.disabled = true;
+
+            const payload = {
+                tipe: document.getElementById('inputTipe').value,
+                kategori: document.getElementById('inputKategori').value,
+                judul_materi: document.getElementById('inputJudul').value,
+                link_drive: document.getElementById('inputLink').value
+            };
+
+            try {
+                let res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                let result = await res.json();
+                if(result.status === "success") {
+                    alert("Berhasil menambahkan konten baru ke database!");
+                    document.getElementById('addForm').reset();
+                    fetchAllData();
+                    switchTab('materi');
+                } else {
+                    alert("Gagal menyimpan data.");
+                }
+            } catch(err) {
+                alert("Terjadi kesalahan jaringan.");
+            } finally {
+                btn.innerText = "Simpan ke Google Sheets 🚀";
+                btn.disabled = false;
+            }
+        }
+
+        fetchAllData();
+    </script>
+</body>
+</html>
