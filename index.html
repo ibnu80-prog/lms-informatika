@@ -99,7 +99,7 @@
     <!-- JavaScript Controller -->
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGXsiY0GpYfjuntAf-VxtKzCeiYKjhtUZYyJ617IrX9YULNoO0--yQfFf0iLUOZ0K2/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyc_FNCk4hbBurkWvEOyLwV-Mi4cDGwN7NxHKj04n922_pOswgj_2G_4Edc4bXJ4SyC/exec";
         let globalData = [];
 
         function switchTab(tab) {
@@ -133,14 +133,14 @@
 
                 renderLists(globalData);
 
-                document.getElementById('searchInput').addEventListener('input', (e) => {
+                document.getElementById('searchInput').oninput = (e) => {
                     const keyword = e.target.value.toLowerCase();
                     const filtered = globalData.filter(item => 
-                        item.judul_materi.toLowerCase().includes(keyword) || 
-                        item.kategori.toLowerCase().includes(keyword)
+                        String(item.judul_materi).toLowerCase().includes(keyword) || 
+                        String(item.kategori).toLowerCase().includes(keyword)
                     );
                     renderLists(filtered);
-                });
+                };
 
             } catch (error) {
                 document.getElementById('loadingMateri').innerHTML = '<span class="text-red-500">Gagal memuat data. Periksa kembali URL Script Anda.</span>';
@@ -154,9 +154,12 @@
             materiListEl.innerHTML = '';
             assessmentListEl.innerHTML = '';
 
-            // Menyesuaikan pencocokan tipe agar sensitif huruf kapital/kecil (Materi vs Assessment)
-            const materis = data.filter(i => !i.tipe || i.tipe.toLowerCase() === "materi" || i.tipe === "");
-            const assessments = data.filter(i => i.tipe && i.tipe.toLowerCase() === "assessment");
+            // Filter berdasarkan kolom tipe ATAU awalan ID (SOAL- vs MAT-) sebagai cadangan
+            const assessments = data.filter(i => 
+                (i.tipe && String(i.tipe).trim().toLowerCase() === "assessment") || 
+                (i.id && String(i.id).startsWith("SOAL-"))
+            );
+            const materis = data.filter(i => !assessments.includes(i));
 
             // Render Materi
             if(materis.length === 0) materiListEl.innerHTML = '<p class="text-center text-slate-400 py-6">Belum ada materi.</p>';
@@ -194,11 +197,13 @@
         async function submitForm(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
+            const selectedTipe = document.getElementById('inputTipe').value;
+            
             btn.innerText = "Menyimpan ke Google Sheets...";
             btn.disabled = true;
 
             const payload = {
-                tipe: document.getElementById('inputTipe').value,
+                tipe: selectedTipe,
                 kategori: document.getElementById('inputKategori').value,
                 judul_materi: document.getElementById('inputJudul').value,
                 link_drive: document.getElementById('inputLink').value
@@ -213,10 +218,11 @@
                 if(result.status === "success") {
                     alert("Berhasil menambahkan konten baru ke database!");
                     document.getElementById('addForm').reset();
-                    fetchAllData();
-                    switchTab('materi');
+                    await fetchAllData();
+                    // Otomatis arahkan ke tab yang sesuai dengan jenis konten yang baru diinput
+                    switchTab(selectedTipe.toLowerCase() === 'assessment' ? 'assessment' : 'materi');
                 } else {
-                    alert("Gagal menyimpan data.");
+                    alert("Gagal menyimpan data: " + (result.message || ""));
                 }
             } catch(err) {
                 alert("Terjadi kesalahan jaringan.");
